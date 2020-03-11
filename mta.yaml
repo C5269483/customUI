@@ -1,0 +1,67 @@
+_schema-version: "3.2"
+ID: uicustom
+version: 1.0.0
+modules:
+- name: mta-uicustom-approuter
+  type: approuter.nodejs
+  path: mta-uicustom-approuter
+  requires:
+  - name: uicustom_html_repo_runtime
+  - name: uaa_uicustom
+  - name: dest_uicustom
+  - name: conn_uicustom
+  parameters:
+    disk-quota: 256M
+    memory: 256M
+- name: uicustom_ui_deployer
+  type: com.sap.html5.application-content
+  path: uicustom_ui_deployer
+  requires:
+  - name: uicustom_html_repo_host
+  build-parameters:
+    requires:
+    - artifacts:
+      - ./*
+      name: uimod
+      target-path: resources/uimod
+- name: uimod
+  type: html5
+  path: uimod
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm run build
+    supported-platforms: []
+resources:
+- name: uicustom_html_repo_runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: uicustom_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: uaa_uicustom
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-plan: application
+- name: conn_uicustom
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: connectivity
+    service-plan: lite
+- name: dest_uicustom
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: destination
+    service-plan: lite
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install
